@@ -28,7 +28,11 @@ Set Up MySQL Database
 ## Create a database named Securelogs
 
 Import the cleaned data using the provided .csv or from the Streamlit UI 
-Update your MySQL credentials in streamlit_app.py: 
+
+
+Update your MySQL credentials in streamlit_app.py:
+
+
 engine = create_engine("mysql+mysqlconnector://root:<your_password>@localhost/Securelogs")
 
 ## Run the streamlit app
