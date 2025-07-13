@@ -1,3 +1,6 @@
+#plateform 
+Visualstudiocode
+
 #Tech Stack
 python - make a script
 mysql - to store and retrive the data
