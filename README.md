@@ -37,6 +37,9 @@ streamlit run streamlit_app.py
 
 ## Sample querirs
 -- Top 10 vehicles involved in drug-related stops
+
+
+
 SELECT vehicle_number, COUNT(*) AS drug_stops
 FROM logs
 WHERE drugs_related_stop = TRUE
