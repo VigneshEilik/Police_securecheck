@@ -8,9 +8,9 @@
 
 # Dataset
 
-traffic_stops - traffic_stops_with_vehicle_number - uncleaned_data
+traffic_stops - traffic_stops_with_vehicle_number.csv - uncleaned_data
 
-police_data - cleaned_data
+police_data.csv - cleaned_data
 
 
 ## 📁 Project Structure
