@@ -42,7 +42,7 @@ st.markdown("**Real-time monitoring and insights for law enforcement 🛡️**")
 
 # Show full table 
 st.header("📋 Police Logs Overview")
-query = "SELECT * FROM logs"
+query = "SELECT * FROM ledger"
 data = fetch_data(query)
 st.dataframe(data, use_container_width=True)
 
@@ -97,48 +97,47 @@ st.header("🧠 Advanced Insights")
 selected_query = st.selectbox("Select a Query to Run", [
     "Top 10 vehicle numbers involved in drug-related stops",
     "Vehicle most frequantly searched",
-    "Time of day with most traffic stops",
-    "Gender distribution of drivers stopped in each country",
-    "Average stop duration for different violations",
-    "Most common violations among young drivers (<25)",
-    "Countries with highest rate of drug-related stops",
-    "Country with most stops where search was conducted",
-    "Time period analysis of stops",
-    "Top 5 violation with highest arrest rate",
-    "Violations with High Search and Arrest Rates",
+    "Which driver age group had the highest arrest rate?",
+    "What is the gender distribution of drivers stopped in each country?",
+    "Which race and gender combination has the highest search rate?",
+    "What time of day sees the most traffic stops?",
+    "What is the average stop duration for different violations?",
+    "Are stops during the night more likely to lead to arrests?",
+    "Which violations are most associated with searches or arrests?",
+    "Which violations are most common among younger drivers (<25)?",
+    "Is there a violation that rarely results in search or arrest?",
+    "Which countries report the highest rate of drug-related stops?",
+    "What is the arrest rate by country and violation?",
+    "Which country has the most stops with search conducted?",
     "Yearly Breakdown of Stops and Arrests by Country",
-    "Arrest rate by country and violation",
-    "Violation rarely resulting in search or arrest",
-    "Driver demographics by country",
-    "Number of stops by year, month, hour of day",
-    "Violation trends by age & race",
-    "Yearly breakdown of stops and arrests by country",
-    "Are stops during night more likely to lead to arrests",
-    "Race & gender combo with highest search rate"
+    "Driver Violation Trends Based on Age and Race",
+    "Time Period Analysis of Stops (Year, Month, Hour)",
+    "Violations with High Search and Arrest Rates",
+    "Driver Demographics by Country (Age, Gender, and Race)",
+    "Top 5 Violations with Highest Arrest Rates"
 ])
 
 query_map = {
-  "Top 10 vehicle numbers involved in drug-related stops": "SELECT vehicle_number, COUNT(*) AS drug_related_stops FROM logs WHERE drugs_related_stop = TRUE GROUP BY vehicle_number ORDER BY drug_related_stops DESC LIMIT 10;",
-  "Vehicle most frequantly searched": "SELECT vehicle_number, COUNT(*) AS search_count FROM logs WHERE search_conducted = TRUE GROUP BY vehicle_number ORDER BY search_count DESC LIMIT 10;",
-  "Time of day with most traffic stops": "SELECT HOUR(TIME(stop_time)) AS stop_hour, COUNT(*) AS stop_count FROM traffic_data GROUP BY stop_hour ORDER BY stop_count DESC;",
-  "Gender distribution of drivers stopped in each country": "SELECT country_name, driver_gender, COUNT(*) AS stop_count FROM logs GROUP BY country_name, driver_gender ORDER BY country_name, stop_count DESC;",
-  "Average stop duration for different violations": "SELECT violation, AVG( CASE stop_duration WHEN '0-15 Min' THEN 10 WHEN '16-30 Min' THEN 23 WHEN '30+ Min' THEN 40 ELSE 0 END ) AS avg_duration_minutes FROM logs GROUP BY violation ORDER BY avg_duration_minutes DESC;",
-  "Most common violations among young drivers (<25)": "SELECT violation, COUNT(*) AS count FROM logs WHERE driver_age < 25 GROUP BY violation ORDER BY count DESC;",
-  "Countries with highest rate of drug-related stops": "SELECT country_name, ROUND(SUM(CASE WHEN drugs_related_stop THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS drug_stop_rate FROM logs GROUP BY country_name ORDER BY drug_stop_rate DESC;",
-  "Country with most stops where search was conducted": "SELECT country_name, COUNT(*) AS search_count FROM logs WHERE search_conducted = TRUE GROUP BY country_name ORDER BY search_count DESC LIMIT 1;",
-  "Time period analysis of stops": "SELECT YEAR(DATE(stop_date)) AS year, MONTH(DATE(stop_date)) AS month, HOUR(TIME(stop_time)) AS hour, COUNT(*) AS stop_count FROM traffic_data GROUP BY year, month, hour ORDER BY stop_count DESC;",
-  "Top 5 violation with highest arrest rate": "SELECT violation, COUNT(*) AS total, SUM(CASE WHEN is_arrested THEN 1 ELSE 0 END) AS arrests, ROUND(SUM(CASE WHEN is_arrested THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate FROM logs GROUP BY violation ORDER BY arrest_rate DESC LIMIT 5;",
-  "Violations with High Search and Arrest Rates": "SELECT violation, COUNT(*) AS total_stops, SUM(CASE WHEN search_conducted THEN 1 ELSE 0 END) AS total_searches, SUM(CASE WHEN is_arrested THEN 1 ELSE 0 END) AS total_arrests, ROUND(SUM(CASE WHEN search_conducted THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS search_rate, ROUND(SUM(CASE WHEN is_arrested THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate, RANK() OVER (ORDER BY SUM(CASE WHEN is_arrested THEN 1 ELSE 0 END) * 1.0 / COUNT(*) DESC) AS arrest_rank FROM logs GROUP BY violation;",
-  "Yearly Breakdown of Stops and Arrests by Country": "SELECT DISTINCT stop_year, country_name,  COUNT(*) OVER (PARTITION BY stop_year, country_name) AS total_stops, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) OVER (PARTITION BY stop_year, country_name) AS total_arrests FROM ( SELECT *, YEAR(DATE(stop_date)) AS stop_year FROM traffic_data) AS sub;",
-  "Arrest rate by country and violation": "SELECT country_name, violation, ROUND(SUM(CASE WHEN is_arrested THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate FROM logs GROUP BY country_name, violation ORDER BY arrest_rate DESC;",
-  "Violation rarely resulting in search or arrest": "SELECT violation, ROUND(SUM(CASE WHEN search_conducted = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS search_rate, ROUND(SUM(CASE WHEN is_arrested = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate FROM logs GROUP BY violation;",
-  "Driver demographics by country": "SELECT country_name, AVG(driver_age) AS avg_age, COUNT(DISTINCT driver_gender) AS gender_variety, COUNT(DISTINCT driver_race) AS race_variety FROM logs GROUP BY country_name;",
-  "Number of stops by year, month, hour of day": "SELECT YEAR(DATE(stop_date)) AS year, MONTH(DATE(stop_date)) AS month, HOUR(TIME(stop_time)) AS hour, COUNT(*) AS stop_count FROM logs GROUP BY year, month, hour ORDER BY stop_count DESC;",
-  "Violation trends by age & race": "SELECT t.driver_age, t.driver_race, t.violation, COUNT(*) AS count FROM logs t JOIN (SELECT driver_age, driver_race FROM logs WHERE driver_age BETWEEN 18 AND 40 GROUP BY driver_age, driver_race) AS demo ON t.driver_age = demo.driver_age AND t.driver_race = demo.driver_race GROUP BY t.driver_age, t.driver_race, t.violation ORDER BY count DESC;",
-  "Yearly breakdown of stops and arrests by country": "SELECT DISTINCT stop_year, country_name, COUNT(*) OVER (PARTITION BY stop_year, country_name) AS total_stops, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) OVER (PARTITION BY stop_year, country_name) AS total_arrests FROM (SELECT *, YEAR(DATE(stop_date)) AS stop_year FROM logs) AS sub;",
-  "Are stops during night more likely to lead to arrests": "SELECT CASE WHEN HOUR(TIME(stop_time)) BETWEEN 6 AND 18 THEN 'Day' ELSE 'Night' END AS time_period, ROUND(SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END)*100.0/COUNT(*),2) AS arrest_rate FROM logs GROUP BY time_period;",
-  "Race & gender combo with highest search rate": "SELECT driver_race, driver_gender, ROUND(SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS search_rate FROM logs GROUP BY driver_race, driver_gender ORDER BY search_rate DESC LIMIT 1;"
-
+    "Top 10 vehicle numbers involved in drug-related stops":"SELECT vehicle_number, COUNT(*) AS drug_related_stops FROM ledger WHERE drugs_related_stop = TRUE GROUP BY vehicle_number ORDER BY drug_related_stops DESC LIMIT 10;",
+    "Vehicle most frequantly searched":"SELECT vehicle_number, COUNT(*) AS search_count FROM ledger WHERE search_conducted = TRUE GROUP BY vehicle_number ORDER BY search_count DESC;",
+    "Which driver age group had the highest arrest rate?":"SELECT driver_age, COUNT(*) AS arrest_count FROM ledger WHERE is_arrested = TRUE GROUP BY driver_age ORDER BY arrest_count DESC;",
+    "What is the gender distribution of drivers stopped in each country?":"SELECT country_name, driver_gender, COUNT(*) AS total_stops FROM ledger GROUP BY country_name, driver_gender;",
+    "Which race and gender combination has the highest search rate?":"SELECT driver_race, driver_gender,  COUNT(*) AS total_stops, SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) AS searches, ROUND(SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS search_rate FROM ledger GROUP BY driver_race, driver_gender ORDER BY search_rate DESC;",
+    "What time of day sees the most traffic stops?":"SELECT HOUR(STR_TO_DATE(stop_time, '%H:%i:%s')) AS hour_of_day, COUNT(*) AS stop_count FROM ledger GROUP BY hour_of_day ORDER BY stop_count DESC;",
+    "What is the average stop duration for different violations?":"SELECT violation, AVG(CASE stop_duration WHEN '0-15 Min' THEN 15 WHEN '16-30 Min' THEN 30 WHEN '30+ Min' THEN 45 END) AS avg_duration_minutes FROM ledger GROUP BY violation;",
+    "Are stops during the night more likely to lead to arrests?":"SELECT CASE WHEN HOUR(STR_TO_DATE(stop_time, '%H:%i:%s')) BETWEEN 20 AND 23 OR HOUR(STR_TO_DATE(stop_time, '%H:%i:%s')) BETWEEN 0 AND 5 THEN 'Night' ELSE 'Day' END AS time_period, COUNT(*) AS total_stops, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS arrests, ROUND(SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate FROM ledger GROUP BY time_period;",
+    "Which violations are most associated with searches or arrests?":"SELECT violation, COUNT(*) AS total_stops, SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) AS total_searches, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS total_arrests FROM ledger GROUP BY violation ORDER BY total_searches DESC, total_arrests DESC;",
+    "Which violations are most common among younger drivers (<25)?":"SELECT violation, COUNT(*) AS count FROM ledger WHERE driver_age < 25 GROUP BY violation ORDER BY count DESC;",
+    "Is there a violation that rarely results in search or arrest?":"SELECT violation, COUNT(*) AS total, SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) AS searches, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS arrests FROM ledger GROUP BY violation HAVING searches = 0 AND arrests = 0;",
+    "Which countries report the highest rate of drug-related stops?":"SELECT country_name, COUNT(*) AS total_stops, SUM(CASE WHEN drugs_related_stop = TRUE THEN 1 ELSE 0 END) AS drug_related, ROUND(SUM(CASE WHEN drugs_related_stop = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS drug_rate FROM ledger GROUP BY country_name ORDER BY drug_rate DESC;",
+    "What is the arrest rate by country and violation?":"SELECT country_name, violation, COUNT(*) AS total, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS arrests, ROUND(SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate FROM ledger GROUP BY country_name, violation;",
+    "Which country has the most stops with search conducted?":"SELECT country_name, COUNT(*) AS search_stops FROM ledger WHERE search_conducted = TRUE GROUP BY country_name ORDER BY search_stops DESC;",
+    "Yearly Breakdown of Stops and Arrests by Country":"SELECT country_name, YEAR(STR_TO_DATE(stop_date, '%Y-%m-%d')) AS year, COUNT(*) AS total_stops, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS arrests, RANK() OVER (PARTITION BY country_name ORDER BY YEAR(STR_TO_DATE(stop_date, '%Y-%m-%d'))) AS year_rank FROM ledger GROUP BY country_name, year;",
+    "Driver Violation Trends Based on Age and Race":"SELECT driver_age, driver_race, violation, COUNT(*) AS total FROM ( SELECT driver_age, driver_race, violation FROM ledger WHERE driver_age IS NOT NULL AND driver_race IS NOT NULL) AS sub GROUP BY driver_age, driver_race, violation ORDER BY total DESC;",
+    "Time Period Analysis of Stops (Year, Month, Hour)":"SELECT YEAR(STR_TO_DATE(stop_date, '%Y-%m-%d')) AS year, MONTH(STR_TO_DATE(stop_date, '%Y-%m-%d')) AS month, HOUR(STR_TO_DATE(stop_time, '%H:%i:%s')) AS hour, COUNT(*) AS stop_count FROM ledger GROUP BY year, month, hour ORDER BY year, month, hour;",
+    "Violations with High Search and Arrest Rates":"SELECT violation, COUNT(*) AS total, SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) AS searches, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS arrests, RANK() OVER (ORDER BY SUM(CASE WHEN search_conducted = TRUE THEN 1 ELSE 0 END) DESC) AS search_rank, RANK() OVER (ORDER BY SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) DESC) AS arrest_rank FROM ledger GROUP BY violation;",
+    "Driver Demographics by Country (Age, Gender, and Race)":"SELECT country_name, driver_age, driver_gender, driver_race, COUNT(*) AS count FROM ledger GROUP BY country_name, driver_age, driver_gender, driver_race;",
+    "Top 5 Violations with Highest Arrest Rates":"SELECT violation, COUNT(*) AS total, SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) AS arrests, ROUND(SUM(CASE WHEN is_arrested = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS arrest_rate FROM ledger GROUP BY violation ORDER BY arrest_rate DESC LIMIT 5;"
 }
 
 if st.button("Run"):
@@ -168,19 +167,18 @@ with st.form("new_log_form"):
     drugs_related_stop = st.selectbox("Was it Drug Related?", ["0", "1"])
     stop_duration = st.selectbox("Stop Duration", data['stop_duration'].dropna().unique())
     vehicle_number = st.text_input("Vehicle Number")
-    timestamp = datetime.now()
 
     submitted = st.form_submit_button("Predict Stop Outcome & Violation")
 
 # --- Prediction Logic (Simplified for Demo) ---
 if submitted:
     filtered_data = data[
-        (data['driver_gender'] == driver_gender) &
-        (data['driver_age'] == driver_age) &
-        (data['search_conducted'] == int(search_conducted)) &
-        (data['stop_duration'] == stop_duration) &
-        (data['drugs_related_stop'] == int(drugs_related_stop))
-    ]
+    (data['driver_gender'] == driver_gender) &
+    (data['driver_age'] == driver_age) &
+    (data['search_conducted'] == int(search_conducted)) &
+    (data['stop_duration'] == stop_duration) &
+    (data['drugs_related_stop'] == int(drugs_related_stop))
+]
 
     if not filtered_data.empty:
         predicted_outcome = filtered_data['stop_outcome'].mode()[0]
@@ -192,6 +190,7 @@ if submitted:
     # Natural Language Summary
     search_text = "a search was conducted" if int(search_conducted) else "no search was conducted"
     drug_text = "was drug-related" if int(drugs_related_stop) else "was not drug-related"
+
 
     st.markdown("### 🧾 Prediction Summary")
     st.write(f"**Predicted Violation:** {predicted_violation}")
