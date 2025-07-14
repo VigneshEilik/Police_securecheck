@@ -37,64 +37,59 @@ def fetch_data(query):
 # Streamlit UI
 st.set_page_config(page_title="SecureCheck Police Dashboard", layout="wide")
 
-st.title("🚔 SecureCheck: Police Check Post Digital Ledger")
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-image: url("https://wallpapers.com/images/file/light-color-background-r4pihhcnw3rgjts9.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+st.markdown(
+    "<h1 style='color:darkblue;'> SecureCheck: Police Check Post Digital Ledger</h1>",
+    unsafe_allow_html=True
+)
+
 st.markdown("**Real-time monitoring and insights for law enforcement 🛡️**")
 
-# Show full table 
-st.header("📋 Police Logs Overview")
+
 query = "SELECT * FROM ledger"
 data = fetch_data(query)
-st.dataframe(data, use_container_width=True)
 
-
-# Quick Metrics
-st.header("📊 Key Metrics")
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    total_stops = data.shape[0]
-    st.metric("Total Police Stops", total_stops)
-    # st.write(data.columns)
-
-with col2:
-    arrests = data[data['stop_outcome'].str.contains("arrest", case=False, na=False)].shape[0]
-    st.metric("Total Arrests", arrests)
-
-with col3:
-    warnings = data[data['stop_outcome'].str.contains("warning", case=False, na=False)].shape[0]
-    st.metric("Total Warnings", warnings)
-
-with col4:
-    drug_related = data[data['drugs_related_stop'] == 1].shape[0]
-    st.metric("Drug Related Stops", drug_related)
 
 # --- Charts ---
-st.header("📈 Visual Insights")
-tab1, tab2 = st.tabs(["Stops by Violation", "Driver Gender Distribution"])
+st.markdown(
+    "<h1 style='color:#0072C6;'> Visual Insights </h1>",
+    unsafe_allow_html=True
+)
 
-with tab1:
-    if not data.empty and 'violation' in data.columns:
-        violation_data = data['violation'].value_counts().reset_index()
-        violation_data.columns = ['Violation', 'Count']
-        fig = px.bar(violation_data, x='Violation', y='Count', title='Stops by Violation Type', color='Violation')
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No data available for Violation chart.")
+tab, = st.tabs(["Driver Gender Distribution"])
 
-with tab2:
+
+with tab:
     if not data.empty and 'driver_gender' in data.columns:
         gender_data = data['driver_gender'].value_counts().reset_index()
         gender_data.columns = ['Gender', 'Count']
-        fig = px.pie(gender_data, names='Gender', values='Count', title='Driver Gender Distribution')
+        fig = px.pie(gender_data, names='Gender', values='Count', title='')
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("No data available for Driver Gender chart.")
 
 
 # --- Advanced Queries ---
-st.header("🧠 Advanced Insights")
+st.markdown(
+    "<h1 style='color:#0072C6;'> Advanced Queries </h1>",
+    unsafe_allow_html=True)
 
-selected_query = st.selectbox("Select a Query to Run", [
+selected_query = st.selectbox("**Select a Query to Run**", [
     "Top 10 vehicle numbers involved in drug-related stops",
     "Vehicle most frequantly searched",
     "Which driver age group had the highest arrest rate?",
@@ -149,11 +144,12 @@ if st.button("Run"):
         st.warning("No results found for the selected query.")
 
 st.markdown("---")
-st.markdown("Built with ❤️ for Law Enforcement by SecureCheck™")
-st.header("🧠 Custom Natural Language Filter")
+st.markdown("**Built with ❤️ for Law Enforcement by SecureCheck™**")
 
 # --- Input Form ---
-st.header("📝 Add New Police Log & Predict Outcome and Violation")
+st.markdown(
+    "<h1 style='color:#0072C6;'> Predict stop outcome and violation Form </h1>",
+    unsafe_allow_html=True)
 
 with st.form("new_log_form"):
     stop_date = st.date_input("Stop Date")
@@ -200,5 +196,16 @@ if submitted:
         f"{stop_time.strftime('%I:%M %p')} on {stop_date}. "
         f"{search_text}, and the stop {drug_text}.  \n"
         f"**Stop Duration:** {stop_duration}  \n"
-        f"**Vehicle Number:** {vehicle_number}"
+        f"**Vehicle Number:****{vehicle_number}"
     )
+
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; font-size: 24px; font-weight: bold; color: #0072C6;'>
+        Obey the Law ❤️ Respect the Law ❤️ Protect the Law
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
