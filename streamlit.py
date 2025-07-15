@@ -71,17 +71,36 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-tab, = st.tabs(["Driver Gender Distribution"])
+tab,tab1 = st.tabs(["Driver Gender Distribution","Driver Race Distribution"])
 
 
 with tab:
     if not data.empty and 'driver_gender' in data.columns:
         gender_data = data['driver_gender'].value_counts().reset_index()
         gender_data.columns = ['Gender', 'Count']
-        fig = px.pie(gender_data, names='Gender', values='Count', title='')
+        fig = px.pie(gender_data, names='Gender', values='Count', title='Driver Gender Distribution')
+        fig.update_layout(paper_bgcolor='#37879B', 
+                          title_font_color='darkblue',
+                          legend_title_font_color='darkblue',
+                          title_x=0.4, title_font_family='Times New Roman',
+                           title_font_size=20)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("No data available for Driver Gender chart.")
+with tab1 :
+    if not data.empty and 'driver_race' in data.columns:
+        race_counts = data['driver_race'].value_counts().reset_index()
+        race_counts.columns = ['Race', 'Count'] # Rename columns for clarity
+        fig = px.pie(race_counts, names='Race', values='Count', title='Driver Race Distribution')
+        fig.update_layout(paper_bgcolor="#37879B",
+                          title_font_color='darkblue',
+                          legend_title_font_color='darkblue',
+                          title_x=0.4,
+                          title_font_family='Times New Roman',
+                          title_font_size=20)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("No data available for race distribution chart.")
 
 
 # --- Advanced Queries ---
